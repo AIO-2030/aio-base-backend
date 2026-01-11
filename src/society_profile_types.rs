@@ -785,8 +785,11 @@ pub fn delete_contact(owner_principal_id: String, contact_principal_id: String) 
             contact_principal_id: contact_principal_id.clone()
         })
     }) {
-        // Remove indices
-        remove_contact_indices(owner_principal_id.clone(), contact_principal_id.clone())?;
+        // Get contact name before removing indices to avoid borrowing conflicts
+        let contact_name = get_contact_by_id(contact_index).map(|c| c.name);
+        
+        // Remove indices - pass the contact name if available
+        remove_contact_indices(owner_principal_id.clone(), contact_principal_id.clone(), contact_name)?;
         
         // Note: We don't actually delete from main storage to maintain referential integrity
         // Instead, we mark it as deleted or keep it for audit purposes
@@ -826,30 +829,35 @@ fn create_contact_indices(contact: &Contact, index: u64) -> Result<(), String> {
 }
 
 fn update_contact_indices(contact: &Contact, index: u64) -> Result<(), String> {
-    // Remove old indices first
-    remove_contact_indices(contact.owner_principal_id.clone(), contact.contact_principal_id.clone())?;
+    // Remove old indices first - pass the contact name to avoid borrowing CONTACTS
+    remove_contact_indices(
+        contact.owner_principal_id.clone(), 
+        contact.contact_principal_id.clone(),
+        Some(contact.name.clone())
+    )?;
     
     // Create new indices
     create_contact_indices(contact, index)
 }
 
-fn remove_contact_indices(owner_principal_id: String, contact_principal_id: String) -> Result<(), String> {
-    if let Some(contact) = get_contact_by_principal_ids(owner_principal_id.clone(), contact_principal_id.clone()) {
-        // Remove from owner-contact index
-        crate::stable_mem_storage::CONTACT_OWNER_INDEX.with(|idx| {
-            let mut idx = idx.borrow_mut();
-            idx.remove(&ContactOwnerKey { 
-                owner_principal_id: owner_principal_id.clone(),
-                contact_principal_id: contact_principal_id.clone()
-            });
+fn remove_contact_indices(owner_principal_id: String, contact_principal_id: String, contact_name: Option<String>) -> Result<(), String> {
+    // Remove from owner-contact index directly without borrowing CONTACTS
+    // This avoids borrowing conflicts when called from within upsert_contact
+    crate::stable_mem_storage::CONTACT_OWNER_INDEX.with(|idx| {
+        let mut idx = idx.borrow_mut();
+        idx.remove(&ContactOwnerKey { 
+            owner_principal_id: owner_principal_id.clone(),
+            contact_principal_id: contact_principal_id.clone()
         });
-        
-        // Remove from name index
+    });
+    
+    // Remove from name index if name is provided
+    if let Some(name) = contact_name {
         crate::stable_mem_storage::CONTACT_NAME_INDEX.with(|idx| {
             let mut idx = idx.borrow_mut();
             idx.remove(&ContactNameKey { 
                 owner_principal_id: owner_principal_id.clone(),
-                name: contact.name
+                name: name
             });
         });
     }

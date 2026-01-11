@@ -9,6 +9,7 @@ use crate::token_economy_types::AccountInfo;
 use crate::pixel_creation_types::{Project, ProjectOwnerKey};
 use crate::device_types::{DeviceInfo, DeviceOwnerKey, DeviceIdKey};
 use crate::types::Order;
+use crate::ai_types::{UserAiConfig, PrincipalKey};
 
 // Type alias for memory
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -249,6 +250,13 @@ thread_local! {
     pub static ORDERS: RefCell<StableBTreeMap<String, Order, Memory>> = RefCell::new(
         StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(103)))
+        )
+    );
+
+    // User AI Config Storage
+    pub static USER_AI_CONFIG: RefCell<StableBTreeMap<PrincipalKey, UserAiConfig, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(104)))
         )
     );
 } 

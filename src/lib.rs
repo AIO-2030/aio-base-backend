@@ -16,6 +16,7 @@ mod order_types;
 mod types;
 mod bitpay;
 mod hmac;
+mod ai_types;
 
 use candid::candid_method;
 use candid::{CandidType, Deserialize};
@@ -48,6 +49,7 @@ use std::cell::RefCell;
 use candid::Principal;
 use crate::bitpay::{create_invoice as bp_create_invoice, get_invoice as bp_get_invoice, set_pos_token as bp_set_pos_token, token as bp_token};
 use crate::hmac::verify_webhook_sig;
+use ai_types::UserAiConfig;
 
 pub use account_storage::*;
 pub use trace_storage::*;
@@ -1903,6 +1905,40 @@ fn update_device_last_seen(device_id: String) -> Result<(), String> {
     ic_cdk::println!("CALL[update_device_last_seen] Input: device_id={}", device_id);
     let result = DeviceService::update_last_seen(&device_id);
     ic_cdk::println!("CALL[update_device_last_seen] Output: {:?}", result);
+    result
+}
+// ==== User AI Config API ====
+
+#[ic_cdk::query]
+fn get_user_ai_config(principal_id: String) -> Option<UserAiConfig> {
+    ic_cdk::println!("CALL[get_user_ai_config] Input: principal_id={}", principal_id);
+    let result = ai_types::get_user_ai_config(principal_id);
+    ic_cdk::println!("CALL[get_user_ai_config] Output: exists={}", result.is_some());
+    result
+}
+
+#[ic_cdk::update]
+fn set_user_ai_config(config: UserAiConfig) -> Result<(), String> {
+    ic_cdk::println!("CALL[set_user_ai_config] Input: principal_id={}, agent_id={}, voice_id={}", 
+                     config.principal_id, config.agent_id, config.voice_id);
+    let result = ai_types::set_user_ai_config(config);
+    ic_cdk::println!("CALL[set_user_ai_config] Output: {:?}", result);
+    result
+}
+
+#[ic_cdk::update]
+fn delete_user_ai_config(principal_id: String) -> Result<(), String> {
+    ic_cdk::println!("CALL[delete_user_ai_config] Input: principal_id={}", principal_id);
+    let result = ai_types::delete_user_ai_config(principal_id);
+    ic_cdk::println!("CALL[delete_user_ai_config] Output: {:?}", result);
+    result
+}
+
+#[ic_cdk::query]
+fn has_user_ai_config(principal_id: String) -> bool {
+    ic_cdk::println!("CALL[has_user_ai_config] Input: principal_id={}", principal_id);
+    let result = ai_types::has_user_ai_config(principal_id);
+    ic_cdk::println!("CALL[has_user_ai_config] Output: {}", result);
     result
 }
 

@@ -544,6 +544,14 @@ type InvoiceResp = record {
   invoice_url: text;
 };
 
+// ==== User AI Config Types ====
+
+type UserAiConfig = record {
+  principal_id: text;
+  agent_id: text;
+  voice_id: text;
+};
+
 // ==== Pixel Creation Types ====
 
 type ProjectId = text;
@@ -824,4 +832,10 @@ service : {
   "admin_set_bitpay_pos_token": (text) -> ();
   "create_order_and_invoice": (CreateOrderArgs) -> (variant { Ok: InvoiceResp; Err: text });
   "get_order_by_id": (text) -> (opt Order) query;
+
+  // User AI Config API
+  "get_user_ai_config": (text) -> (opt UserAiConfig) query;
+  "set_user_ai_config": (UserAiConfig) -> (variant { Ok; Err: text });
+  "delete_user_ai_config": (text) -> (variant { Ok; Err: text });
+  "has_user_ai_config": (text) -> (bool) query;
 }
