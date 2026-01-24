@@ -17,6 +17,7 @@ mod types;
 mod bitpay;
 mod hmac;
 mod ai_types;
+pub mod task_rewards;
 
 use candid::candid_method;
 use candid::{CandidType, Deserialize};
@@ -1939,6 +1940,127 @@ fn has_user_ai_config(principal_id: String) -> bool {
     ic_cdk::println!("CALL[has_user_ai_config] Input: principal_id={}", principal_id);
     let result = ai_types::has_user_ai_config(principal_id);
     ic_cdk::println!("CALL[has_user_ai_config] Output: {}", result);
+    result
+}
+
+// ==== Task Rewards API ====
+
+use task_rewards::{TaskContractItem, UserTaskState, ClaimTicket, ClaimResultStatus, MerkleSnapshotMeta};
+
+/// Initialize task contract (admin only)
+#[ic_cdk::update]
+fn init_task_contract(tasks: Vec<TaskContractItem>) -> Result<(), String> {
+    ic_cdk::println!("CALL[init_task_contract] Input: {} tasks", tasks.len());
+    let result = task_rewards::init_task_contract(tasks);
+    ic_cdk::println!("CALL[init_task_contract] Output: {:?}", result);
+    result
+}
+
+/// Get task contract
+#[ic_cdk::query]
+fn get_task_contract() -> Vec<TaskContractItem> {
+    ic_cdk::println!("CALL[get_task_contract] Input: none");
+    let result = task_rewards::get_task_contract();
+    ic_cdk::println!("CALL[get_task_contract] Output: {} tasks", result.len());
+    result
+}
+
+/// Get or initialize user tasks (user login)
+#[ic_cdk::query]
+fn get_or_init_user_tasks(wallet: String) -> UserTaskState {
+    ic_cdk::println!("CALL[get_or_init_user_tasks] Input: wallet={}", wallet);
+    let result = task_rewards::get_or_init_user_tasks(wallet);
+    ic_cdk::println!("CALL[get_or_init_user_tasks] Output: {} tasks", result.tasks.len());
+    result
+}
+
+/// Record payment and trigger AI subscription task completion
+#[ic_cdk::update]
+fn record_payment(
+    wallet: String,
+    amount_paid: u64,
+    tx_ref: String,
+    ts: u64,
+    payfor: Option<String>,
+) -> Result<(), String> {
+    ic_cdk::println!("CALL[record_payment] Input: wallet={}, amount={}, tx_ref={}, payfor={:?}", 
+                     wallet, amount_paid, tx_ref, payfor);
+    let result = task_rewards::record_payment(wallet, amount_paid, tx_ref, ts, payfor);
+    ic_cdk::println!("CALL[record_payment] Output: {:?}", result);
+    result
+}
+
+/// Complete a task (register device, voice clone, etc.)
+#[ic_cdk::update]
+fn complete_task(
+    wallet: String,
+    taskid: String,
+    evidence: Option<String>,
+    ts: u64,
+) -> Result<(), String> {
+    ic_cdk::println!("CALL[complete_task] Input: wallet={}, taskid={}, evidence={:?}", 
+                     wallet, taskid, evidence);
+    let result = task_rewards::complete_task(wallet, taskid, evidence, ts);
+    ic_cdk::println!("CALL[complete_task] Output: {:?}", result);
+    result
+}
+
+/// Build epoch snapshot - generates Merkle tree (admin/scheduled)
+#[ic_cdk::update]
+fn build_epoch_snapshot(epoch: u64) -> Result<MerkleSnapshotMeta, String> {
+    ic_cdk::println!("CALL[build_epoch_snapshot] Input: epoch={}", epoch);
+    let result = task_rewards::build_epoch_snapshot(epoch);
+    match &result {
+        Ok(meta) => ic_cdk::println!("CALL[build_epoch_snapshot] Output: Success - {} leaves, root={:?}", 
+                                    meta.leaves_count, meta.root),
+        Err(e) => ic_cdk::println!("CALL[build_epoch_snapshot] Output: Error - {}", e),
+    }
+    result
+}
+
+/// Get claim ticket for frontend to submit on-chain
+#[ic_cdk::query]
+fn get_claim_ticket(wallet: String) -> Result<ClaimTicket, String> {
+    ic_cdk::println!("CALL[get_claim_ticket] Input: wallet={}", wallet);
+    let result = task_rewards::get_claim_ticket(wallet);
+    match &result {
+        Ok(ticket) => ic_cdk::println!("CALL[get_claim_ticket] Output: Success - epoch={}, index={}, amount={}", 
+                                      ticket.epoch, ticket.index, ticket.amount),
+        Err(e) => ic_cdk::println!("CALL[get_claim_ticket] Output: Error - {}", e),
+    }
+    result
+}
+
+/// Mark claim result after on-chain transaction
+#[ic_cdk::update]
+fn mark_claim_result(
+    wallet: String,
+    epoch: u64,
+    status: ClaimResultStatus,
+    tx_sig: Option<String>,
+) -> Result<(), String> {
+    ic_cdk::println!("CALL[mark_claim_result] Input: wallet={}, epoch={}, status={:?}, tx={:?}", 
+                     wallet, epoch, status, tx_sig);
+    let result = task_rewards::mark_claim_result(wallet, epoch, status, tx_sig);
+    ic_cdk::println!("CALL[mark_claim_result] Output: {:?}", result);
+    result
+}
+
+/// Get epoch metadata
+#[ic_cdk::query]
+fn get_epoch_meta(epoch: u64) -> Option<MerkleSnapshotMeta> {
+    ic_cdk::println!("CALL[get_epoch_meta] Input: epoch={}", epoch);
+    let result = task_rewards::get_epoch_meta(epoch);
+    ic_cdk::println!("CALL[get_epoch_meta] Output: exists={}", result.is_some());
+    result
+}
+
+/// List all epoch metadata
+#[ic_cdk::query]
+fn list_all_epochs() -> Vec<MerkleSnapshotMeta> {
+    ic_cdk::println!("CALL[list_all_epochs] Input: none");
+    let result = task_rewards::list_all_epochs();
+    ic_cdk::println!("CALL[list_all_epochs] Output: {} epochs", result.len());
     result
 }
 

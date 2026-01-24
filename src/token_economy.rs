@@ -937,7 +937,7 @@ pub fn get_recharge_history(principal: Principal, offset: u64, limit: u64) -> Ve
 /// Add principal-account mapping (only one item allowed)
 pub fn add_recharge_principal_account(item: RechargePrincipalAccount) -> Result<(), String> {
     RECHARGE_PRINCIPAL_ACCOUNTS.with(|vec| {
-        let mut vec = vec.borrow_mut();
+        let vec = vec.borrow_mut();
         // clear all existing items
         while vec.len() > 0 {
             vec.pop();
@@ -963,7 +963,7 @@ pub fn get_recharge_principal_account() -> Option<RechargePrincipalAccount> {
 /// Update principal-account mapping (updates the single item)
 pub fn update_recharge_principal_account(item: RechargePrincipalAccount) -> Result<(), String> {
     RECHARGE_PRINCIPAL_ACCOUNTS.with(|vec| {
-        let mut vec = vec.borrow_mut();
+        let vec = vec.borrow_mut();
         vec.set(0, &item);
         Ok(())
     })
@@ -972,7 +972,7 @@ pub fn update_recharge_principal_account(item: RechargePrincipalAccount) -> Resu
 /// Delete principal-account mapping (removes the single item)
 pub fn delete_recharge_principal_account() -> Result<(), String> {
     RECHARGE_PRINCIPAL_ACCOUNTS.with(|vec| {
-        let mut vec = vec.borrow_mut();
+        let vec = vec.borrow_mut();
         if vec.len() > 0 {
             while vec.len() > 0 {
                 vec.pop();

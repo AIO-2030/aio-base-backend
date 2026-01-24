@@ -27,6 +27,7 @@ base64 = "0.21"
 urlencoding = "2"
 hex = "0.4"
 anyhow = "1.0.100"
+bs58 = "0.5"
 # Removed getrandom and rand - using IC-native randomness instead
 
 [profile.release]

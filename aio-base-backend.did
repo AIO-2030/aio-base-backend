@@ -554,6 +554,59 @@ type UserAiConfig = record {
 
 // ==== Pixel Creation Types ====
 
+// ==== Task Rewards Types ====
+
+type TaskStatus = variant {
+  NotStarted;
+  InProgress;
+  Completed;
+  RewardPrepared;
+  TicketIssued;
+  Claimed;
+};
+
+type ClaimResultStatus = variant {
+  Success;
+  Failed;
+};
+
+type TaskContractItem = record {
+  taskid: text;
+  reward: nat64;
+  payfor: opt text;
+};
+
+type UserTaskDetail = record {
+  taskid: text;
+  status: TaskStatus;
+  completed_at: nat64;
+  evidence: opt text;
+  reward_amount: nat64;
+};
+
+type UserTaskState = record {
+  wallet: text;
+  tasks: vec UserTaskDetail;
+  total_unclaimed: nat64;
+};
+
+type MerkleSnapshotMeta = record {
+  epoch: nat64;
+  leaves_count: nat64;
+  root: vec nat8;
+  locked: bool;
+  created_at: nat64;
+};
+
+type ClaimTicket = record {
+  epoch: nat64;
+  wallet: text;
+  index: nat64;
+  amount: nat64;
+  root: vec nat8;
+  proof: vec vec nat8;
+};
+
 type ProjectId = text;
 type VersionId = text;
 
@@ -838,4 +891,16 @@ service : {
   "set_user_ai_config": (UserAiConfig) -> (variant { Ok; Err: text });
   "delete_user_ai_config": (text) -> (variant { Ok; Err: text });
   "has_user_ai_config": (text) -> (bool) query;
+
+  // Task Rewards API
+  "init_task_contract": (vec TaskContractItem) -> (variant { Ok; Err: text });
+  "get_task_contract": () -> (vec TaskContractItem) query;
+  "get_or_init_user_tasks": (text) -> (UserTaskState);
+  "record_payment": (text, nat64, text, nat64, opt text) -> (variant { Ok; Err: text });
+  "complete_task": (text, text, opt text, nat64) -> (variant { Ok; Err: text });
+  "build_epoch_snapshot": (nat64) -> (variant { Ok: MerkleSnapshotMeta; Err: text });
+  "get_claim_ticket": (text) -> (variant { Ok: ClaimTicket; Err: text }) query;
+  "mark_claim_result": (text, nat64, ClaimResultStatus, opt text) -> (variant { Ok; Err: text });
+  "get_epoch_meta": (nat64) -> (opt MerkleSnapshotMeta) query;
+  "list_all_epochs": () -> (vec MerkleSnapshotMeta) query;
 }

@@ -702,7 +702,6 @@ pub fn get_total_aiotoken_claimable() -> u64 {
 // Get all MCP rewards with pagination
 pub fn get_all_mcp_rewards_paginated(offset: u64, limit: u64) -> Vec<RewardEntry> {
     let mut all_rewards = Vec::new();
-    let mut current_offset = 0u64;
     let mut processed_count = 0u64;
     
     // Get all MCP names from MCP_REWARD_INDEX

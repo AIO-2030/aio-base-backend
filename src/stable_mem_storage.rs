@@ -10,6 +10,10 @@ use crate::pixel_creation_types::{Project, ProjectOwnerKey};
 use crate::device_types::{DeviceInfo, DeviceOwnerKey, DeviceIdKey};
 use crate::types::Order;
 use crate::ai_types::{UserAiConfig, PrincipalKey};
+use crate::task_rewards::{
+    TaskContractItem, UserTaskState, PaymentRecord, MerkleSnapshotMeta, 
+    LayerOffset, MerkleHash, EpochWalletKey, EpochLayerKey
+};
 
 // Type alias for memory
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -257,6 +261,57 @@ thread_local! {
     pub static USER_AI_CONFIG: RefCell<StableBTreeMap<PrincipalKey, UserAiConfig, Memory>> = RefCell::new(
         StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(104)))
+        )
+    );
+
+    // ===== Task Rewards Storage (Memory IDs: 120-129) =====
+    
+    // Task contract: taskid -> TaskContractItem
+    pub static TASK_CONTRACT: RefCell<StableBTreeMap<String, TaskContractItem, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(120)))
+        )
+    );
+    
+    // User tasks: wallet -> UserTaskState
+    pub static USER_TASKS: RefCell<StableBTreeMap<String, UserTaskState, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(121)))
+        )
+    );
+    
+    // Payment records: append-only log
+    pub static PAYMENTS: RefCell<StableVec<PaymentRecord, Memory>> = RefCell::new(
+        StableVec::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(122)))
+        ).unwrap()
+    );
+    
+    // Epoch metadata: epoch -> MerkleSnapshotMeta
+    pub static EPOCH_META: RefCell<StableBTreeMap<u64, MerkleSnapshotMeta, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(123)))
+        )
+    );
+    
+    // Epoch wallet index: EpochWalletKey -> (index, amount)
+    pub static EPOCH_WALLET_INDEX: RefCell<StableBTreeMap<EpochWalletKey, (u64, u64), Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(124)))
+        )
+    );
+    
+    // Merkle tree layers: flat storage of all hashes
+    pub static EPOCH_LAYERS: RefCell<StableVec<MerkleHash, Memory>> = RefCell::new(
+        StableVec::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(125)))
+        ).unwrap()
+    );
+    
+    // Layer offsets: EpochLayerKey -> LayerOffset
+    pub static EPOCH_LAYER_OFFSETS: RefCell<StableBTreeMap<EpochLayerKey, LayerOffset, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(126)))
         )
     );
 } 
