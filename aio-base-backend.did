@@ -856,6 +856,7 @@ service : {
   "pop_notification": (text) -> (opt NotificationItem);
   "get_notifications_for_receiver": (text) -> (vec NotificationItem) query;
   "clear_notifications_for_pair": (text, text) -> (variant { Ok: nat64; Err: text });
+  "clear_chat_history_for_pair": (text, text) -> (variant { Ok: nat64; Err: text });
 
   // Pixel Creation API
   "create_pixel_project": (text, PixelArtSource, opt text) -> (variant { Ok: ProjectId; Err: text });

@@ -1103,6 +1103,55 @@ pub fn get_chat_message_count(principal1: String, principal2: String) -> u64 {
     })
 }
 
+/// Clear all chat messages for a social pair (and notifications for that pair).
+/// Returns the number of messages that were removed.
+pub fn clear_chat_history_for_pair(principal1: String, principal2: String) -> Result<u64, String> {
+    let pair_key = generate_social_pair_key(principal1.clone(), principal2.clone());
+    ic_cdk::println!(
+        "TRACK[clear_chat_history_for_pair] start pair_key={} principal1={} principal2={}",
+        pair_key,
+        principal1,
+        principal2
+    );
+
+    let sk = SocialPairKey { pair_key: pair_key.clone() };
+
+    let removed_count = crate::stable_mem_storage::CHAT_HISTORIES.with(|histories| {
+        let mut histories = histories.borrow_mut();
+        if let Some(chat_history) = histories.remove(&sk) {
+            chat_history.messages.len() as u64
+        } else {
+            0
+        }
+    });
+
+    ic_cdk::println!(
+        "TRACK[clear_chat_history_for_pair] removed_messages={} pair_key={}",
+        removed_count,
+        pair_key
+    );
+
+    // Clear notifications for this pair for both users
+    let n1 = clear_notifications_for_pair(pair_key.clone(), principal1.clone())
+        .unwrap_or(0);
+    let n2 = clear_notifications_for_pair(pair_key.clone(), principal2.clone())
+        .unwrap_or(0);
+
+    ic_cdk::println!(
+        "TRACK[clear_chat_history_for_pair] notifications_cleared principal1_count={} principal2_count={}",
+        n1,
+        n2
+    );
+
+    ic_cdk::println!(
+        "TRACK[clear_chat_history_for_pair] done removed_messages={} pair_key={}",
+        removed_count,
+        pair_key
+    );
+
+    Ok(removed_count)
+}
+
 // Notification queue functions
 
 /// Push notification to queue

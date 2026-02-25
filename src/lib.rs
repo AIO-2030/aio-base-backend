@@ -1696,6 +1696,33 @@ fn clear_notifications_for_pair(
     result
 }
 
+/// Clear all chat messages for a social pair (and related notifications)
+#[ic_cdk::update]
+fn clear_chat_history_for_pair(principal1: String, principal2: String) -> Result<u64, String> {
+    ic_cdk::println!("CALL[clear_chat_history_for_pair] Input: principal1={}, principal2={}", principal1, principal2);
+    let result = society_profile_types::clear_chat_history_for_pair(principal1.clone(), principal2.clone());
+    match &result {
+        Ok(removed) => {
+            ic_cdk::println!(
+                "TRACK[clear_chat_history_for_pair] principal1={} principal2={} removed_messages={}",
+                principal1,
+                principal2,
+                removed
+            );
+        }
+        Err(e) => {
+            ic_cdk::println!(
+                "TRACK[clear_chat_history_for_pair] error principal1={} principal2={} err={}",
+                principal1,
+                principal2,
+                e
+            );
+        }
+    }
+    ic_cdk::println!("CALL[clear_chat_history_for_pair] Output: {:?}", result);
+    result
+}
+
 // ==== Pixel Creation API ====
 
 /// Create a new pixel art project
