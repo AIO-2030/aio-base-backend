@@ -14,6 +14,7 @@ use crate::task_rewards::{
     TaskContractItem, UserTaskState, PaymentRecord, MerkleSnapshotMeta, 
     LayerOffset, MerkleHash, EpochWalletKey, EpochLayerKey
 };
+use crate::ai_subscription_types::{ServiceType, SubscriptionRecord, PrincipalSubscriptionKey};
 
 // Type alias for memory
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -312,6 +313,23 @@ thread_local! {
     pub static EPOCH_LAYER_OFFSETS: RefCell<StableBTreeMap<EpochLayerKey, LayerOffset, Memory>> = RefCell::new(
         StableBTreeMap::init(
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(126)))
+        )
+    );
+
+    // ===== AI Subscription Storage (Memory IDs: 130-132) =====
+    pub static AI_SERVICES: RefCell<StableBTreeMap<String, ServiceType, Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(130)))
+        )
+    );
+    pub static SUBSCRIPTION_RECORDS: RefCell<StableVec<SubscriptionRecord, Memory>> = RefCell::new(
+        StableVec::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(131)))
+        ).unwrap()
+    );
+    pub static SUBSCRIPTION_PRINCIPAL_INDEX: RefCell<StableBTreeMap<PrincipalSubscriptionKey, (), Memory>> = RefCell::new(
+        StableBTreeMap::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(132)))
         )
     );
 } 

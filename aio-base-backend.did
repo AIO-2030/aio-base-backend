@@ -552,6 +552,34 @@ type UserAiConfig = record {
   voice_id: text;
 };
 
+// ==== AI Subscription Types ====
+
+type PriceLevel = variant {
+  M;
+  Y;
+  E;
+};
+
+type ServiceType = record {
+  svr_id: text;
+  name: text;
+  price_level: PriceLevel;
+  price: nat64;
+};
+
+type SubscriptionStatus = variant {
+  Normal;
+  Resolved;
+};
+
+type SubscriptionRecord = record {
+  principal_id: text;
+  pay_walletid: text;
+  svr_id: text;
+  pay_date: text;
+  status: SubscriptionStatus;
+};
+
 // ==== Pixel Creation Types ====
 
 // ==== Task Rewards Types ====
@@ -904,4 +932,22 @@ service : {
   "mark_claim_result": (text, nat64, ClaimResultStatus, opt text) -> (variant { Ok; Err: text });
   "get_epoch_meta": (nat64) -> (opt MerkleSnapshotMeta) query;
   "list_all_epochs": () -> (vec MerkleSnapshotMeta) query;
+
+  // AI Subscription API
+  "ai_sub_create_service": (ServiceType) -> (variant { Ok; Err: text });
+  "ai_sub_get_service": (text) -> (opt ServiceType) query;
+  "ai_sub_update_service": (text, ServiceType) -> (variant { Ok; Err: text });
+  "ai_sub_delete_service": (text) -> (variant { Ok; Err: text });
+  "ai_sub_list_services": () -> (vec ServiceType) query;
+  "ai_sub_list_services_paginated": (nat64, nat64) -> (vec ServiceType) query;
+  "ai_sub_service_count": () -> (nat64) query;
+  "ai_sub_create_subscription_record": (SubscriptionRecord) -> (variant { Ok: nat64; Err: text });
+  "ai_sub_get_subscription_record": (nat64) -> (opt SubscriptionRecord) query;
+  "ai_sub_update_subscription_status": (nat64, SubscriptionStatus) -> (variant { Ok; Err: text });
+  "ai_sub_resolve_subscription": (nat64) -> (variant { Ok; Err: text });
+  "ai_sub_list_subscriptions_by_principal": (text) -> (vec SubscriptionRecord) query;
+  "ai_sub_list_subscriptions_by_principal_paginated": (text, nat64, nat64) -> (vec SubscriptionRecord) query;
+  "ai_sub_subscription_record_count": () -> (nat64) query;
+  "ai_sub_is_subscribed": (text, text) -> (bool) query;
+  "ai_sub_get_active_subscriptions": (text) -> (vec SubscriptionRecord) query;
 }

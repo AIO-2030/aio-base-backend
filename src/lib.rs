@@ -17,6 +17,8 @@ mod types;
 mod bitpay;
 mod hmac;
 mod ai_types;
+mod ai_subscription_types;
+mod ai_sub_service;
 pub mod task_rewards;
 
 use candid::candid_method;
@@ -2089,6 +2091,114 @@ fn list_all_epochs() -> Vec<MerkleSnapshotMeta> {
     let result = task_rewards::list_all_epochs();
     ic_cdk::println!("CALL[list_all_epochs] Output: {} epochs", result.len());
     result
+}
+
+// ==== AI Subscription API ====
+
+use ai_subscription_types::{ServiceType, SubscriptionRecord, SubscriptionStatus};
+
+#[ic_cdk::update]
+fn ai_sub_create_service(service: ServiceType) -> Result<(), String> {
+    ic_cdk::println!("CALL[ai_sub_create_service] Input: svr_id={}", service.svr_id);
+    let result = ai_sub_service::create_service(service);
+    ic_cdk::println!("CALL[ai_sub_create_service] Output: {:?}", result);
+    result
+}
+
+#[ic_cdk::query]
+fn ai_sub_get_service(svr_id: String) -> Option<ServiceType> {
+    ic_cdk::println!("CALL[ai_sub_get_service] Input: svr_id={}", svr_id);
+    let result = ai_sub_service::get_service(&svr_id);
+    ic_cdk::println!("CALL[ai_sub_get_service] Output: exists={}", result.is_some());
+    result
+}
+
+#[ic_cdk::update]
+fn ai_sub_update_service(svr_id: String, service: ServiceType) -> Result<(), String> {
+    ic_cdk::println!("CALL[ai_sub_update_service] Input: svr_id={}", svr_id);
+    let result = ai_sub_service::update_service(&svr_id, service);
+    ic_cdk::println!("CALL[ai_sub_update_service] Output: {:?}", result);
+    result
+}
+
+#[ic_cdk::update]
+fn ai_sub_delete_service(svr_id: String) -> Result<(), String> {
+    ic_cdk::println!("CALL[ai_sub_delete_service] Input: svr_id={}", svr_id);
+    let result = ai_sub_service::delete_service(&svr_id);
+    ic_cdk::println!("CALL[ai_sub_delete_service] Output: {:?}", result);
+    result
+}
+
+#[ic_cdk::query]
+fn ai_sub_list_services() -> Vec<ServiceType> {
+    ic_cdk::println!("CALL[ai_sub_list_services] Input: none");
+    let result = ai_sub_service::list_services();
+    ic_cdk::println!("CALL[ai_sub_list_services] Output: count={}", result.len());
+    result
+}
+
+#[ic_cdk::query]
+fn ai_sub_list_services_paginated(offset: u64, limit: usize) -> Vec<ServiceType> {
+    ic_cdk::println!("CALL[ai_sub_list_services_paginated] Input: offset={}, limit={}", offset, limit);
+    let result = ai_sub_service::list_services_paginated(offset, limit);
+    ic_cdk::println!("CALL[ai_sub_list_services_paginated] Output: count={}", result.len());
+    result
+}
+
+#[ic_cdk::query]
+fn ai_sub_service_count() -> u64 {
+    ai_sub_service::service_count()
+}
+
+#[ic_cdk::update]
+fn ai_sub_create_subscription_record(record: SubscriptionRecord) -> Result<u64, String> {
+    ic_cdk::println!("CALL[ai_sub_create_subscription_record] Input: principal={}, svr_id={}", record.principal_id, record.svr_id);
+    let result = ai_sub_service::create_subscription_record(record);
+    ic_cdk::println!("CALL[ai_sub_create_subscription_record] Output: {:?}", result);
+    result
+}
+
+#[ic_cdk::query]
+fn ai_sub_get_subscription_record(index: u64) -> Option<SubscriptionRecord> {
+    ai_sub_service::get_subscription_record(index)
+}
+
+#[ic_cdk::update]
+fn ai_sub_update_subscription_status(index: u64, status: SubscriptionStatus) -> Result<(), String> {
+    ai_sub_service::update_subscription_status(index, status)
+}
+
+#[ic_cdk::update]
+fn ai_sub_resolve_subscription(index: u64) -> Result<(), String> {
+    ai_sub_service::resolve_subscription(index)
+}
+
+#[ic_cdk::query]
+fn ai_sub_list_subscriptions_by_principal(principal_id: String) -> Vec<SubscriptionRecord> {
+    ic_cdk::println!("CALL[ai_sub_list_subscriptions_by_principal] Input: principal_id={}", principal_id);
+    let result = ai_sub_service::list_subscriptions_by_principal(&principal_id);
+    ic_cdk::println!("CALL[ai_sub_list_subscriptions_by_principal] Output: count={}", result.len());
+    result
+}
+
+#[ic_cdk::query]
+fn ai_sub_list_subscriptions_by_principal_paginated(principal_id: String, offset: u64, limit: usize) -> Vec<SubscriptionRecord> {
+    ai_sub_service::list_subscriptions_by_principal_paginated(&principal_id, offset, limit)
+}
+
+#[ic_cdk::query]
+fn ai_sub_subscription_record_count() -> u64 {
+    ai_sub_service::subscription_record_count()
+}
+
+#[ic_cdk::query]
+fn ai_sub_is_subscribed(principal_id: String, svr_id: String) -> bool {
+    ai_sub_service::is_subscribed(&principal_id, &svr_id)
+}
+
+#[ic_cdk::query]
+fn ai_sub_get_active_subscriptions(principal_id: String) -> Vec<SubscriptionRecord> {
+    ai_sub_service::get_active_subscriptions(&principal_id)
 }
 
 
