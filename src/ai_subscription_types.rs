@@ -21,7 +21,7 @@ pub struct ServiceType {
     pub svr_id: String,
     pub name: String,
     pub price_level: PriceLevel,
-    /// Price in USDT-compatible units (e.g. cents or smallest unit)
+    /// Price in USDT smallest unit (Solana USDT decimals=6: 1 USDT = 1_000_000)
     pub price: u64,
 }
 
